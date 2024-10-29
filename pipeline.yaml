@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'arkdev15/mytest'
+        DOCKER_CREDENTIALS_ID = '66601960-9aba-4b39-bafe-983a41412cf3'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                
+                git url: 'https://github.com/SambramA5/mynewlab.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    
+                    sh 'docker build -t $DOCKER_IMAGE .'
+                }
+            }
+        }
+
+        stage('Upload to Docker Registry') {
+            steps {
+                script {
+                    
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    }
+
+                    
+                    sh 'docker push $DOCKER_IMAGE'
+                }
+            }
+        }
+    }
+
+    
+}
